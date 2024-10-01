@@ -42,7 +42,7 @@
   
 - Se os testes de unidade estiverem difíceis de serem escritos, esse pode ser um indicativo de que o código possui baixa qualidade.
 
-### Moc
+### Mock
 
 > Instância que **representa** código servidor onde os retornos podem ser configurados dentro do próprio teste. Geralmente a partir de Interfaces. Desta forma não é necessário a utilização de código real.
 
