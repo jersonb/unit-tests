@@ -4,7 +4,7 @@ using Store.Domain.Services;
 
 namespace Store.Domain.Tests;
 
-public class SaleServiceTests
+public class SaleServiceFakesTests
 {
     [Fact]
     public void Should_create_sale()
@@ -26,7 +26,7 @@ public class SaleServiceTests
         Sale sale = Guid.NewGuid();
         var productRepositoryFake = new ProductRepositoryFake();
         var service = new SaleService(saleRepositoryFake, productRepositoryFake);
-        var product = productRepositoryFake.ProductQuantity0;
+        var product = ProductRepositoryFake.ProductQuantity0;
         service.AddProduct(sale, product);
 
         Assert.Empty(sale.Products);
@@ -41,7 +41,7 @@ public class SaleServiceTests
 
         var service = new SaleService(saleRepositoryFake, productRepositoryFake);
         Sale sale = Guid.NewGuid();
-        service.AddProduct(sale, productRepositoryFake.ProductQuantity1);
+        service.AddProduct(sale, ProductRepositoryFake.ProductQuantity1);
 
         Assert.Empty(sale.Errors);
         Assert.Single(sale.Products);
@@ -51,17 +51,18 @@ public class SaleServiceTests
     public void Should_add_many_products_in_sale()
     {
         var saleRepositoryFake = new SaleRepositoryFake();
-        Sale sale = Guid.NewGuid();
         var productRepositoryFake = new ProductRepositoryFake();
         var service = new SaleService(saleRepositoryFake, productRepositoryFake);
 
-        var product1 = productRepositoryFake.ProductQuantity1;
+        Sale sale = Guid.NewGuid();
+
+        var product1 = ProductRepositoryFake.ProductQuantity1;
         service.AddProduct(sale, product1);
 
-        var product0 = productRepositoryFake.ProductQuantity0;
+        var product0 = ProductRepositoryFake.ProductQuantity0;
         service.AddProduct(sale, product0);
 
-        var product2 = productRepositoryFake.ProductQuantity2;
+        var product2 = ProductRepositoryFake.ProductQuantity2;
         service.AddProduct(sale, product2);
 
         Assert.Contains(ErrorDomain.ProductOutOfStock(product0), sale.Errors);
@@ -75,7 +76,22 @@ public class SaleServiceTests
         Sale sale = Guid.NewGuid();
         var productRepositoryFake = new ProductRepositoryFake();
         var service = new SaleService(saleRepositoryFake, productRepositoryFake);
-        var product = productRepositoryFake.ProductQuantity1;
+        var product = ProductRepositoryFake.ProductQuantity1;
+        service.AddProduct(sale, product);
+
+        service.Finish(sale);
+
+        Assert.True(product.Quantity == 0);
+    }
+
+    [Fact]
+    public void Should_not_decrease_product_when_sale_invalid()
+    {
+        var saleRepositoryFake = new SaleRepositoryFake();
+        Sale sale = Guid.NewGuid();
+        var productRepositoryFake = new ProductRepositoryFake();
+        var service = new SaleService(saleRepositoryFake, productRepositoryFake);
+        var product = ProductRepositoryFake.ProductQuantity0;
         service.AddProduct(sale, product);
 
         service.Finish(sale);
@@ -96,21 +112,26 @@ public class SaleServiceTests
 
     private class ProductRepositoryFake : IProductRepository
     {
-        public Product ProductQuantity0 => new(Guid.NewGuid().ToString(), 1.0m, 0);
-        public Product ProductQuantity1 => new(Guid.NewGuid().ToString(), 1.0m, 1);
-        public Product ProductQuantity2 => new(Guid.NewGuid().ToString(), 1.0m, 2);
+        public static Product ProductQuantity0 = new(Guid.NewGuid().ToString(), 1.0m, 0);
+        public static Product ProductQuantity1 = new(Guid.NewGuid().ToString(), 1.0m, 1);
+        public static Product ProductQuantity2 = new(Guid.NewGuid().ToString(), 1.0m, 2);
+        private readonly List<Product> products;
 
+        public ProductRepositoryFake()
+        {
+            ProductQuantity0.Uuid = Guid.NewGuid();
+            ProductQuantity1.Uuid = Guid.NewGuid();
+            ProductQuantity2.Uuid = Guid.NewGuid();
+            products = [ProductQuantity0, ProductQuantity1, ProductQuantity2];
+        }
 
         public bool CheckStock(Product product)
         {
-            List<Product> products = [ProductQuantity0, ProductQuantity1, ProductQuantity2];
-            return products.Any(p => p.Uuid == product.Uuid && p.Quantity >= product.Quantity && p.Quantity > 0);
+            return products.Exists(p => p.Uuid == product.Uuid && p.Quantity >= product.Quantity && p.Quantity > 0);
         }
 
         public bool DownStock(List<Product> saleProducts)
         {
-            List<Product> products = [ProductQuantity0, ProductQuantity1, ProductQuantity2];
-
             var result = false;
             saleProducts.ForEach(sp =>
             {

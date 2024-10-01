@@ -4,12 +4,6 @@ namespace Store.Domain.Models;
 
 public record Product
 {
-    public Product(Guid uuid, int quantity)
-    {
-        Uuid = uuid != Guid.Empty ? uuid : throw new InvalidProductException("Uuid is invalid.");
-        Quantity = quantity;
-    }
-
     public Product(string name, decimal price, int quantity)
     {
         Name = name.Trim().Length > 5 ? name.Trim() : throw new InvalidProductException("Name is invalid.");
