@@ -23,9 +23,10 @@ public class SaleServiceFakesTests
     public void Should_add_error_in_sale_when_product_out_of_stock()
     {
         var saleRepositoryFake = new SaleRepositoryFake();
-        Sale sale = Guid.NewGuid();
         var productRepositoryFake = new ProductRepositoryFake();
         var service = new SaleService(saleRepositoryFake, productRepositoryFake);
+
+        Sale sale = Guid.NewGuid();
         var product = ProductRepositoryFake.ProductQuantity0;
         service.AddProduct(sale, product);
 
