@@ -14,7 +14,7 @@ public record Product
 
     public Guid Uuid { get; set; }
 
-    public string Name { get; } = string.Empty!;
+    public string Name { get; }
 
     public decimal Price { get; }
 
